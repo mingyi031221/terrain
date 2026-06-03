@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { generateMap, MapGenerationError } from './map-generator';
+import { generateMap, MapGenerationError, ensureConnected } from './map-generator';
 import { chatComplete } from './llm-client';
+import type { TerrainMap } from '../../src/types';
 
 vi.mock('./llm-client', () => ({
   chatComplete: vi.fn(),
@@ -103,5 +104,53 @@ describe('generateMap', () => {
     const secondCall = mockedChatComplete.mock.calls[1][0];
     expect(secondCall.userPrompt).toContain('上次返回出错');
     expect(secondCall.userPrompt).toContain('JSON parse failed');
+  });
+});
+
+describe('ensureConnected', () => {
+  function map(nodeCount: number, edges: [string, string][]): TerrainMap {
+    return {
+      version: '1.0',
+      topic: 'X',
+      generatedAt: '2026-06-03T00:00:00.000Z',
+      userPositionLabel: '入门',
+      nodes: Array.from({ length: nodeCount }, (_, i) => ({
+        id: `node-${i + 1}`,
+        title: `t${i + 1}`,
+        summary: 's',
+        difficulty: 2 as const,
+        estimatedMinutes: 30,
+        required: true,
+      })),
+      edges: edges.map(([from, to]) => ({ from, to, kind: 'prerequisite' as const })),
+    };
+  }
+  const deg = (m: TerrainMap, id: string) =>
+    m.edges.filter((e) => e.from === id || e.to === id).length;
+
+  it('connects an orphan node to the hub with a real edge', () => {
+    // node-3 has no edges
+    const out = ensureConnected(
+      map(3, [
+        ['node-1', 'node-2'],
+      ]),
+    );
+    expect(deg(out, 'node-3')).toBeGreaterThan(0);
+    // hub is node-1 (root with most out-edges); new edge points from it
+    expect(out.edges).toContainEqual({ from: 'node-1', to: 'node-3', kind: 'prerequisite' });
+  });
+
+  it('leaves an already-connected graph unchanged', () => {
+    const m = map(3, [
+      ['node-1', 'node-2'],
+      ['node-2', 'node-3'],
+    ]);
+    expect(ensureConnected(m).edges).toEqual(m.edges);
+  });
+
+  it('connects every node when the graph has no edges at all (star from node-1)', () => {
+    const out = ensureConnected(map(4, []));
+    for (const n of out.nodes) expect(deg(out, n.id)).toBeGreaterThan(0);
+    expect(out.edges).toHaveLength(3); // node-1 → 2,3,4
   });
 });

@@ -18,11 +18,14 @@ const REPO = path.resolve(import.meta.dirname, '..');
 const TINT: Record<string, { bg: string; border: string; text: string }> = {
   blue: { bg: 'rgba(129,178,213,0.62)', border: 'rgba(96,150,194,0.85)', text: '#234a66' },
   green: { bg: 'rgba(143,194,150,0.62)', border: 'rgba(112,172,122,0.85)', text: '#2f5a39' },
+  olive: { bg: 'rgba(182,200,128,0.62)', border: 'rgba(156,180,102,0.85)', text: '#566627' },
+  orange: { bg: 'rgba(240,170,110,0.64)', border: 'rgba(224,148,86,0.85)', text: '#8a4c1f' },
   pink: { bg: 'rgba(237,156,168,0.62)', border: 'rgba(224,128,144,0.85)', text: '#893a48' },
   purple: { bg: 'rgba(186,168,219,0.62)', border: 'rgba(158,138,202,0.85)', text: '#4e3d75' },
   yellow: { bg: 'rgba(233,206,132,0.66)', border: 'rgba(211,180,104,0.9)', text: '#735824' },
 };
-const COLOR_NAMES = ['blue', 'green', 'pink', 'purple', 'yellow'];
+// sorted to match the app's alphabetical glob order
+const COLOR_NAMES = ['blue', 'green', 'olive', 'orange', 'pink', 'purple', 'yellow'];
 
 const map = (JSON.parse(readFileSync(mapJson, 'utf-8')) as { map: TerrainMap }).map;
 const opts =
@@ -33,9 +36,7 @@ const nodes = scatterLayout(map, opts);
 for (const n of nodes)
   console.error(`  ${n.id} x=${n.x.toFixed(0)} y=${n.y.toFixed(0)} (${((n.y / H) * 100).toFixed(0)}%) ${n.labelDir} ${n.title}`);
 
-const MTN = ['blue', 'green', 'pink', 'purple', 'yellow'].map(
-  (c) => path.join(REPO, `src/assets/mountains/mountain_${c}.png`),
-);
+const MTN = COLOR_NAMES.map((c) => path.join(REPO, `src/assets/mountains/mountain_${c}.png`));
 function dataUri(file: string): string {
   const ext = path.extname(file).toLowerCase();
   const mime = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';

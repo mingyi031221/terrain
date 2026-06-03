@@ -45,16 +45,29 @@ function hashSeed(s: string): number {
 
 // translucent label tint that matches each mountain's watercolor colour, so a
 // label reads as "belonging to" its peak.
-const LABEL_TINT: Record<string, { bg: string; border: string; text: string }> = {
+type Tint = { bg: string; border: string; text: string };
+const LABEL_TINT: Record<string, Tint> = {
   blue: { bg: 'rgba(129,178,213,0.62)', border: 'rgba(96,150,194,0.8)', text: '#234a66' },
   green: { bg: 'rgba(143,194,150,0.62)', border: 'rgba(112,172,122,0.8)', text: '#2f5a39' },
   pink: { bg: 'rgba(237,156,168,0.62)', border: 'rgba(224,128,144,0.8)', text: '#893a48' },
   purple: { bg: 'rgba(186,168,219,0.62)', border: 'rgba(158,138,202,0.8)', text: '#4e3d75' },
   yellow: { bg: 'rgba(233,206,132,0.66)', border: 'rgba(211,180,104,0.85)', text: '#735824' },
+  orange: { bg: 'rgba(240,170,110,0.64)', border: 'rgba(224,148,86,0.85)', text: '#8a4c1f' },
+  teal: { bg: 'rgba(130,200,190,0.62)', border: 'rgba(100,180,168,0.85)', text: '#1f5e57' },
+  olive: { bg: 'rgba(182,200,128,0.62)', border: 'rgba(156,180,102,0.85)', text: '#566627' },
+  matcha: { bg: 'rgba(182,200,128,0.62)', border: 'rgba(156,180,102,0.85)', text: '#566627' },
+  red: { bg: 'rgba(236,150,150,0.62)', border: 'rgba(222,120,120,0.85)', text: '#8a3535' },
+  brown: { bg: 'rgba(206,176,140,0.64)', border: 'rgba(180,150,112,0.85)', text: '#5e4a30' },
+  cyan: { bg: 'rgba(140,196,214,0.62)', border: 'rgba(108,174,196,0.85)', text: '#235a6a' },
 };
-function tintOf(src: string): { bg: string; border: string; text: string } {
-  const m = /mountain_(blue|green|pink|purple|yellow)/.exec(src);
-  return LABEL_TINT[m?.[1] ?? 'blue'] ?? LABEL_TINT.blue;
+const NEUTRAL_TINT: Tint = {
+  bg: 'rgba(255,253,245,0.86)',
+  border: 'rgba(160,140,90,0.55)',
+  text: '#3b3424',
+};
+function tintOf(src: string): Tint {
+  const m = /mountain_([a-z0-9]+)/i.exec(src);
+  return (m && LABEL_TINT[m[1].toLowerCase()]) || NEUTRAL_TINT;
 }
 
 function easeInOutCubic(t: number): number {

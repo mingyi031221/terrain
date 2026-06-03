@@ -18,6 +18,46 @@ const SYSTEM_PROMPT =
 
 const MAX_ATTEMPTS = 2;
 
+/**
+ * Guarantee the dependency graph is connected: any node that ended up with no
+ * edges at all gets a real prerequisite edge from the hub (a no-incoming root
+ * with the most out-edges). This never creates a cycle (the orphan has no
+ * outgoing path back to the hub), so every node always gets a proper arrow —
+ * the prompt asks for this, this just makes it certain.
+ */
+export function ensureConnected(map: TerrainMap): TerrainMap {
+  const deg = new Map<string, number>();
+  const indeg = new Map<string, number>();
+  const outdeg = new Map<string, number>();
+  for (const n of map.nodes) {
+    deg.set(n.id, 0);
+    indeg.set(n.id, 0);
+    outdeg.set(n.id, 0);
+  }
+  for (const e of map.edges) {
+    deg.set(e.from, (deg.get(e.from) ?? 0) + 1);
+    deg.set(e.to, (deg.get(e.to) ?? 0) + 1);
+    indeg.set(e.to, (indeg.get(e.to) ?? 0) + 1);
+    outdeg.set(e.from, (outdeg.get(e.from) ?? 0) + 1);
+  }
+
+  const roots = map.nodes.filter((n) => (indeg.get(n.id) ?? 0) === 0);
+  const pool = roots.length ? roots : map.nodes;
+  const hub = pool.reduce(
+    (best, n) => ((outdeg.get(n.id) ?? 0) > (outdeg.get(best.id) ?? 0) ? n : best),
+    pool[0],
+  );
+
+  const orphans = map.nodes.filter((n) => (deg.get(n.id) ?? 0) === 0 && n.id !== hub.id);
+  if (orphans.length === 0) return map;
+
+  const edges = [...map.edges];
+  for (const o of orphans) {
+    edges.push({ from: hub.id, to: o.id, kind: 'prerequisite' });
+  }
+  return { ...map, edges };
+}
+
 export interface GenerateMapOptions {
   signal?: AbortSignal;
 }
@@ -54,7 +94,7 @@ export async function generateMap(
 
     const result = parseTerrainMapDraft(parsed);
     if (result.ok) {
-      return combineToTerrainMap(result.data);
+      return ensureConnected(combineToTerrainMap(result.data));
     }
     lastReason = `schema validation failed: ${result.error}`;
   }
