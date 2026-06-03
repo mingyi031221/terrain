@@ -1,0 +1,29 @@
+# Render.com Blueprint — free, single web service (static frontend + API).
+# In Render: New ➜ Blueprint ➜ connect this repo. It reads this file, then you
+# fill in the four LLM_* values (they're marked sync:false so they're never
+# committed). See DEPLOY.md for the click-by-click walkthrough.
+services:
+  - type: web
+    name: terrain
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # paste these from your local .env (the values that already work):
+      - key: LLM_API_BASE_URL
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_MODEL_MAP
+        sync: false
+      - key: LLM_MODEL_DETAIL
+        sync: false
+      # optional quota guards (defaults shown) — raise/lower as you like:
+      - key: RATE_LIMIT_PER_MIN
+        value: "20"
+      - key: RATE_LIMIT_GLOBAL_PER_MIN
+        value: "120"

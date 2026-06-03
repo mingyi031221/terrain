@@ -1,0 +1,25 @@
+node_modules/
+dist/
+build/
+coverage/
+
+.env
+.env.local
+.env.*.local
+
+.vite/
+*.log
+npm-debug.log*
+
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+.claude/settings.local.json
+.claude/launch.json
+
+# raw source art (~47MB of 2K PNGs from Gemini). The app only needs the
+# processed, compressed copies in src/assets/, which ARE committed. Keep the
+# originals locally; re-split with scripts/split-stickers.mjs if needed.
+gemini-assets/
